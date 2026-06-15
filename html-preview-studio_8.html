@@ -1,0 +1,1054 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>HTMLプレビュースタジオ</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=M+PLUS+Rounded+1c:wght@500;700;800&display=swap" rel="stylesheet">
+<script src="https://accounts.google.com/gsi/client" async defer></script>
+<style>
+  :root{
+    --ink:#2b2742;
+    --paper:#f3f5fc;
+    --card:#ffffff;
+    --coral:#ff6b5e;
+    --coral-soft:#ffe3e0;
+    --blue:#4d8dff;
+    --blue-soft:#dfeaff;
+    --green:#19b88f;
+    --green-deep:#0f9d79;
+    --yellow:#ffc94d;
+    --editor-bg:#2a2d3e;
+    --editor-text:#e9ebf5;
+    --gutter:#9aa0b8;
+    --radius:18px;
+    --shadow:0 4px 0 rgba(43,39,66,.16);
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  html,body{height:100%}
+  body{
+    font-family:"M PLUS Rounded 1c","Hiragino Maru Gothic ProN","BIZ UDPGothic","Yu Gothic",sans-serif;
+    background:var(--paper);
+    color:var(--ink);
+    font-weight:500;
+    display:flex;flex-direction:column;
+    height:100vh;
+    overflow:hidden;
+  }
+  button{font-family:inherit;cursor:pointer}
+
+  /* ===== ヘッダー ===== */
+  header{
+    display:flex;align-items:center;gap:12px;flex-wrap:wrap;
+    padding:14px 20px;
+    background:var(--card);
+    border-bottom:3px solid var(--ink);
+    flex-shrink:0;
+  }
+  .logo{
+    display:flex;align-items:center;gap:10px;
+  }
+  .logo-mark{
+    width:40px;height:40px;border-radius:12px;
+    background:linear-gradient(135deg,var(--coral) 0 50%,var(--blue) 50% 100%);
+    border:3px solid var(--ink);
+    display:grid;place-items:center;
+    color:#fff;font-weight:800;font-size:15px;
+    box-shadow:var(--shadow);
+  }
+  h1{font-size:1.15rem;font-weight:800;letter-spacing:.02em}
+  .save-state{
+    font-size:.75rem;color:#7a7790;margin-left:2px;min-width:90px;
+  }
+  .header-btns{margin-left:auto;display:flex;gap:10px}
+
+  /* ===== ボタン共通(ステッカー風) ===== */
+  .btn{
+    border:3px solid var(--ink);
+    border-radius:999px;
+    padding:8px 18px;
+    font-weight:800;font-size:.9rem;
+    background:var(--card);color:var(--ink);
+    box-shadow:var(--shadow);
+    transition:transform .08s ease,box-shadow .08s ease;
+    display:inline-flex;align-items:center;gap:6px;
+  }
+  .btn:hover{transform:translateY(-2px);box-shadow:0 6px 0 rgba(43,39,66,.16)}
+  .btn:active{transform:translateY(2px);box-shadow:0 1px 0 rgba(43,39,66,.16)}
+  .btn:focus-visible{outline:3px solid var(--blue);outline-offset:3px}
+  .btn-run{background:var(--green);color:#fff;font-size:1rem;padding:10px 26px}
+  .btn-run:hover{background:var(--green-deep)}
+  .btn-danger{background:#fff;color:#d6453a}
+  .btn-mini{padding:6px 14px;font-size:.8rem}
+  .btn-solid-red{background:#e25548;color:#fff}
+  .btn-save{background:var(--yellow);border-color:var(--ink);font-weight:800}
+  .btn-save:hover{background:#ffd773}
+
+  /* ===== メインレイアウト ===== */
+  main{
+    display:grid;
+    grid-template-columns:minmax(330px,44%) 1fr;
+    gap:18px;
+    padding:18px 20px;
+    max-width:1500px;margin:0 auto;
+    flex:1;
+    min-height:0;
+    width:100%;
+    overflow:hidden;
+  }
+  .editors{display:flex;flex-direction:column;gap:18px;min-height:0;height:100%}
+  .editors .card{flex:1;min-height:0}
+
+  /* ===== エディタカード ===== */
+  .card{
+    background:var(--card);
+    border:3px solid var(--ink);
+    border-radius:var(--radius);
+    box-shadow:var(--shadow);
+    overflow:hidden;
+    display:flex;flex-direction:column;
+    min-height:0;
+  }
+  .card-head{
+    display:flex;align-items:center;gap:10px;
+    padding:10px 14px;
+    border-bottom:3px solid var(--ink);
+    flex-shrink:0;
+  }
+  .tab{
+    font-weight:800;font-size:.9rem;color:#fff;
+    border:2.5px solid var(--ink);border-radius:10px;
+    padding:3px 14px;
+  }
+  .tab-html{background:var(--coral)}
+  .tab-css{background:var(--blue)}
+  .card-head.html-head{background:var(--coral-soft)}
+  .card-head.css-head{background:var(--blue-soft)}
+  .card-hint{font-size:.75rem;color:#6c6885}
+
+  .editor-wrap{
+    display:flex;flex:1;min-height:0;background:var(--editor-bg);
+  }
+  .gutter{
+    user-select:none;
+    padding:12px 8px 12px 12px;
+    text-align:right;
+    color:var(--gutter);
+    background:#232636;
+    font:13px/1.65 "Consolas","Menlo","Osaka-Mono",monospace;
+    overflow:hidden;
+    min-width:42px;
+    white-space:pre;
+  }
+  textarea.code{
+    flex:1;border:0;resize:none;outline:none;
+    background:transparent;color:transparent;
+    caret-color:var(--yellow);
+    padding:12px;
+    font:13px/1.65 "Consolas","Menlo","Osaka-Mono",monospace;
+    white-space:pre;overflow:auto;
+    tab-size:2;
+    position:relative;z-index:2;
+  }
+  textarea.code::placeholder{color:#6f7390;-webkit-text-fill-color:#6f7390}
+  textarea.code:focus-visible{box-shadow:inset 0 0 0 3px var(--blue)}
+  .editor-stack{flex:1;position:relative}
+  pre.highlight{
+    position:absolute;inset:0;margin:0;
+    padding:12px;
+    font:13px/1.65 "Consolas","Menlo","Osaka-Mono",monospace;
+    white-space:pre;overflow:auto;
+    color:var(--editor-text);
+    pointer-events:none !important;
+    user-select:none;
+    z-index:1;
+  }
+  pre.highlight, textarea.code{tab-size:2}
+  /* HTML token colors */
+  .tk-tag{color:#7aa6ff}
+  .tk-attr{color:#ffcb6b}
+  .tk-val{color:#c3e88d}
+  .tk-punc{color:#9aa0b8}
+  .tk-comment{color:#6c7086;font-style:italic}
+  .tk-text{color:var(--editor-text)}
+  /* CSS token colors */
+  .tk-sel{color:#7aa6ff}
+  .tk-prop{color:#82b1ff}
+  .tk-cssval{color:#c3e88d}
+
+  /* ===== プレビューカード ===== */
+  .preview-card{height:100%;min-height:0}
+  .preview-head{
+    display:flex;align-items:center;gap:10px;flex-wrap:wrap;
+    background:#fff7e2;
+  }
+  .preview-actions{margin-left:auto;display:flex;gap:8px;flex-wrap:wrap}
+  .preview-body{flex:1;position:relative;background:#fff}
+  iframe.preview{
+    position:absolute;inset:0;width:100%;height:100%;border:0;background:#fff;
+  }
+  .empty-state{
+    position:absolute;inset:0;display:flex;flex-direction:column;
+    align-items:center;justify-content:center;gap:10px;
+    color:#8a86a0;text-align:center;padding:20px;
+  }
+  .empty-state .face{font-size:2.6rem}
+  .empty-state p{font-weight:700;line-height:1.7}
+
+  /* ===== モーダル ===== */
+  .overlay{
+    position:fixed;inset:0;background:rgba(43,39,66,.55);
+    display:none;align-items:center;justify-content:center;
+    padding:18px;z-index:50;
+  }
+  .overlay.show{display:flex}
+  .modal{
+    background:var(--card);border:3px solid var(--ink);
+    border-radius:var(--radius);box-shadow:0 8px 0 rgba(0,0,0,.25);
+    width:min(640px,100%);max-height:88vh;overflow:auto;
+    padding:22px;
+  }
+  .modal h2{font-size:1.1rem;font-weight:800;margin-bottom:12px;display:flex;align-items:center;gap:8px}
+  .modal h3{font-size:.95rem;font-weight:800;margin:16px 0 6px;color:var(--ink)}
+  .modal p,.modal li{font-size:.9rem;line-height:1.85}
+  .modal ol{padding-left:22px}
+  .modal .note{
+    background:var(--coral-soft);border:2px dashed var(--coral);
+    border-radius:12px;padding:10px 14px;margin-top:14px;font-size:.85rem;line-height:1.8;
+  }
+  .modal-foot{display:flex;justify-content:flex-end;gap:10px;margin-top:18px}
+  .url-box{
+    width:100%;height:120px;margin-top:8px;
+    border:2.5px solid var(--ink);border-radius:12px;
+    padding:10px;font:12px/1.5 "Consolas",monospace;
+    resize:none;background:#f7f7fb;color:var(--ink);
+  }
+  .url-meta{font-size:.78rem;color:#6c6885;margin-top:6px}
+  .kbd{background:#eee;border:1.5px solid #ccc;border-radius:6px;padding:0 6px;font-size:.8em}
+
+  /* ===== 全画面プレビュー ===== */
+  .fs-overlay{
+    position:fixed;inset:0;background:#fff;z-index:60;display:none;flex-direction:column;
+  }
+  .fs-overlay.show{display:flex}
+  .fs-bar{
+    display:flex;align-items:center;gap:10px;
+    padding:8px 14px;background:var(--ink);color:#fff;
+  }
+  .fs-bar span{font-weight:800;font-size:.85rem}
+  .fs-bar .btn{margin-left:auto;box-shadow:none;border-color:#fff;background:#fff}
+  .fs-overlay iframe{flex:1;border:0;width:100%}
+
+  /* ===== トースト ===== */
+  .toast{
+    position:fixed;left:50%;bottom:26px;transform:translateX(-50%) translateY(20px);
+    background:var(--ink);color:#fff;font-weight:700;font-size:.88rem;
+    padding:10px 22px;border-radius:999px;
+    opacity:0;pointer-events:none;transition:opacity .25s,transform .25s;
+    z-index:80;max-width:90vw;text-align:center;
+  }
+  .toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+
+  /* ===== レスポンシブ ===== */
+  @media (max-width:920px){
+    body{height:auto;overflow:auto}
+    main{grid-template-columns:1fr;padding:14px 12px 24px;overflow:visible;height:auto}
+    .editors .card{flex:none}
+    .editor-wrap{height:200px;flex:none}
+    .preview-card{height:auto;min-height:420px}
+    h1{font-size:1rem}
+    .header-btns .btn{padding:7px 13px;font-size:.8rem}
+  }
+  @media (prefers-reduced-motion:reduce){
+    .btn,.toast{transition:none}
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="logo">
+    <div class="logo-mark">&lt;/&gt;</div>
+    <div>
+      <h1>HTMLプレビュースタジオ</h1>
+      <div class="save-state" id="saveState">　</div>
+    </div>
+  </div>
+  <div class="header-btns">
+    <button class="btn btn-mini" id="btnGuide">📖 使い方</button>
+    <button class="btn btn-mini" id="btnLoad">📂 読み込む</button>
+    <button class="btn btn-mini btn-danger" id="btnClear">🗑 全クリア</button>
+  </div>
+  <input type="file" id="fileInput" accept=".html,.htm,text/html" hidden>
+</header>
+
+<main>
+  <!-- ===== 入力エリア ===== -->
+  <section class="editors">
+    <div class="card">
+      <div class="card-head html-head">
+        <span class="tab tab-html">HTML</span>
+        <span class="card-hint">ページの中身(本文)を書こう</span>
+      </div>
+      <div class="editor-wrap">
+        <div class="gutter" id="gutterHtml">1</div>
+        <div class="editor-stack">
+          <pre class="highlight" id="highlightHtml" aria-hidden="true"></pre>
+          <textarea class="code" id="inputHtml" spellcheck="false"
+            placeholder="&lt;h1&gt;こんにちは!&lt;/h1&gt;&#10;&lt;p&gt;はじめてのホームページ&lt;/p&gt;"
+            aria-label="HTMLコード入力欄"></textarea>
+        </div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-head css-head">
+        <span class="tab tab-css">CSS</span>
+        <span class="card-hint">色やデザインを書こう</span>
+      </div>
+      <div class="editor-wrap">
+        <div class="gutter" id="gutterCss">1</div>
+        <div class="editor-stack">
+          <pre class="highlight" id="highlightCss" aria-hidden="true"></pre>
+          <textarea class="code" id="inputCss" spellcheck="false"
+            placeholder="h1 {&#10;  color: tomato;&#10;}"
+            aria-label="CSSコード入力欄"></textarea>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ===== プレビュー ===== -->
+  <section class="card preview-card">
+    <div class="card-head preview-head">
+      <button class="btn btn-run" id="btnRun">▶ 表示する</button>
+      <div class="preview-actions">
+        <button class="btn btn-mini" id="btnImage">🖼 画像を追加</button>
+        <button class="btn btn-mini" id="btnFullscreen">⛶ 全画面</button>
+        <button class="btn btn-mini" id="btnUrl">🔗 URLを作る</button>
+        <button class="btn btn-mini btn-save" id="btnDownload">⬇ 保存(ダウンロード)</button>
+        <button class="btn btn-mini btn-save" id="btnDrive">💾 ドライブに保存</button>
+        <button class="btn btn-mini btn-save" id="btnLoad2">📂 続きを読み込む</button>
+      </div>
+    </div>
+    <div class="preview-body">
+      <iframe class="preview" id="previewFrame" sandbox="allow-popups allow-popups-to-escape-sandbox" title="プレビュー画面" tabindex="-1"></iframe>
+      <div class="empty-state" id="emptyState">
+        <div class="face">🎨</div>
+        <p>左にコードを書いて<br>「▶ 表示する」を押すと<br>ここにホームページが表示されます</p>
+      </div>
+    </div>
+  </section>
+</main>
+
+<!-- ===== 使い方モーダル ===== -->
+<div class="overlay" id="guideOverlay" role="dialog" aria-modal="true" aria-labelledby="guideTitle">
+  <div class="modal">
+    <h2 id="guideTitle">📖 使い方ガイド</h2>
+    <h3>① コードを書く</h3>
+    <p>左の <b>HTML欄</b> にページの中身、<b>CSS欄</b> にデザインを書きます。書いた内容はこの端末に自動保存されるので、ページを閉じても次回続きから再開できます。</p>
+    <h3>② プレビューする</h3>
+    <p><b>「▶ 表示する」</b>を押すと右側に結果が表示されます(押すまで更新されません)。<b>「⛶ 全画面」</b>で大きく確認できます。ページ内の<b>リンク(aタグ)</b>は新しいタブで開きます。</p>
+    <h3>🖼 画像を入れたい</h3>
+    <p><b>「🖼 画像を追加」</b>を押して画像ファイルを選ぶと、画像データを作品に埋め込んだimgタグが作られます。表示されたタグをコピーして、HTML欄に貼り付けましょう。ネット上の画像のURLを直接 src に指定する方法も、これまでどおり使えます。</p>
+    <h3>③ Googleドライブに保存して、続きをやる</h3>
+    <p><b>「💾 ドライブに保存」</b>を押すと、自分のGoogleアカウントのマイドライブに作品(my-page.html)が保存されます。初回だけGoogleへのログイン確認が出ます。2回目からは同じファイルに上書き保存されます。</p>
+    <p>「💾」が使えない場合や手動で保存したい場合は、次の方法でもOKです。</p>
+    <ol>
+      <li><b>保存:</b>「⬇ ダウンロード」でファイル(my-page.html)を保存し、Googleドライブにアップロードします。
+        <br>・<b>PC:</b> drive.google.com を開き「＋新規」→「ファイルのアップロード」
+        <br>・<b>iPad:</b> ドライブアプリで「＋」→「アップロード」→「ブラウズ」からファイルを選択
+      </li>
+      <li><b>再開:</b>このアプリの「📂 読み込む」を押し、保存したファイルを選びます。
+        <br>・<b>PC:</b> 先にドライブからファイルをダウンロードしておき、それを選択
+        <br>・<b>iPad:</b> ファイル選択画面で「ブラウズ」→「ドライブ」から直接選択できます
+      </li>
+    </ol>
+    <h3>④ 先生に提出する</h3>
+    <p>提出方法は2つあります。どちらでもOKです。</p>
+    <ol>
+      <li><b>URLで提出:</b>「🔗 URLを作る」→「コピー」を押し、そのURLを先生に送ります。先生がURLを開くと、作品がそのまま表示されます。</li>
+      <li><b>ファイルで提出:</b>「⬇ ダウンロード」で保存したファイルを、そのまま先生に提出(Google Classroom等)できます。</li>
+    </ol>
+    <div class="note">
+      ⚠ このアプリでは安全のため <b>&lt;script&gt;タグ(JavaScript)は動作しません</b>。<br>
+      ⚠ URLがブラウザで開けない場合は、ファイルでの提出に切り替えてください。
+    </div>
+    <div class="modal-foot">
+      <button class="btn" id="btnGuideClose">閉じる</button>
+    </div>
+  </div>
+</div>
+
+<!-- ===== 画像追加モーダル ===== -->
+<div class="overlay" id="imageOverlay" role="dialog" aria-modal="true" aria-labelledby="imageTitle">
+  <div class="modal">
+    <h2 id="imageTitle">🖼 画像を追加</h2>
+    <p>画像ファイルを選ぶと、コードの中で使えるタグを作ります。<b>画像データはこの作品ファイルの中に保存されます</b>(画像ファイルを別に用意する必要はありません)。</p>
+    <input type="file" id="imageFileInput" accept="image/*" style="margin-top:10px">
+    <div id="imagePreviewWrap" style="display:none;margin-top:12px">
+      <img id="imagePreviewImg" alt="プレビュー" style="max-width:100%;max-height:160px;border:2px solid var(--ink);border-radius:10px;display:block;margin-bottom:8px">
+      <p style="font-size:.85rem">下のタグをコピーして、HTML欄の好きな場所に貼り付けてください。</p>
+      <textarea class="url-box" id="imageTagBox" readonly style="height:60px"></textarea>
+    </div>
+    <div class="note" id="imageWarning" style="display:none">
+      ⚠ 画像サイズが大きいです。作品ファイルが大きくなりすぎる場合があります。できれば小さい画像を使いましょう。
+    </div>
+    <div class="modal-foot">
+      <button class="btn" id="btnImageClose">閉じる</button>
+      <button class="btn btn-run" id="btnImageCopy" disabled>📋 タグをコピー</button>
+    </div>
+  </div>
+</div>
+
+<!-- ===== 全クリア確認モーダル ===== -->
+<div class="overlay" id="clearOverlay" role="dialog" aria-modal="true" aria-labelledby="clearTitle">
+  <div class="modal">
+    <h2 id="clearTitle">🗑 全クリアしますか?</h2>
+    <p>HTMLとCSSの内容をすべて消去します。<b>自動保存されたデータも消えて、元に戻せません。</b></p>
+    <div class="modal-foot">
+      <button class="btn" id="btnClearCancel">やめる</button>
+      <button class="btn btn-solid-red" id="btnClearOk">消去する</button>
+    </div>
+  </div>
+</div>
+
+<!-- ===== ドライブ未設定モーダル ===== -->
+<div class="overlay" id="driveSetupOverlay" role="dialog" aria-modal="true" aria-labelledby="driveSetupTitle">
+  <div class="modal">
+    <h2 id="driveSetupTitle">💾 ドライブ連携は準備中です</h2>
+    <p>「ドライブに保存」は、先生がGoogle連携の設定を完了すると使えるようになります。</p>
+    <p>それまでは「⬇ ダウンロード」でファイルを保存して、Googleドライブにアップロードしてください(手順は📖使い方ガイドにあります)。</p>
+    <div class="modal-foot">
+      <button class="btn" id="btnDriveSetupClose">閉じる</button>
+    </div>
+  </div>
+</div>
+
+<!-- ===== 読み込み確認モーダル ===== -->
+<div class="overlay" id="loadOverlay" role="dialog" aria-modal="true" aria-labelledby="loadTitle">
+  <div class="modal">
+    <h2 id="loadTitle">📂 ファイルを読み込みますか?</h2>
+    <p>読み込むと、<b>今書いているHTML・CSSの内容は置き換わります。</b>必要なら先に「⬇ ダウンロード」で保存しておきましょう。</p>
+    <div class="modal-foot">
+      <button class="btn" id="btnLoadCancel">やめる</button>
+      <button class="btn btn-run" id="btnLoadOk">読み込む</button>
+    </div>
+  </div>
+</div>
+
+<!-- ===== URLモーダル ===== -->
+<div class="overlay" id="urlOverlay" role="dialog" aria-modal="true" aria-labelledby="urlTitle">
+  <div class="modal">
+    <h2 id="urlTitle">🔗 作品のURLができました</h2>
+    <p>下のURLをコピーして先生に送りましょう。受け取った人はブラウザのアドレスバーに貼り付けると作品が見られます。</p>
+    <textarea class="url-box" id="urlBox" readonly aria-label="生成されたURL"></textarea>
+    <div class="url-meta" id="urlMeta"></div>
+    <div class="modal-foot">
+      <button class="btn" id="btnUrlClose">閉じる</button>
+      <button class="btn btn-run" id="btnUrlCopy">📋 コピー</button>
+    </div>
+  </div>
+</div>
+
+<!-- ===== 全画面プレビュー ===== -->
+<div class="fs-overlay" id="fsOverlay">
+  <div class="fs-bar">
+    <span>⛶ 全画面プレビュー</span>
+    <button class="btn btn-mini" id="btnFsClose">✕ 閉じる</button>
+  </div>
+  <iframe id="fsFrame" sandbox="allow-popups allow-popups-to-escape-sandbox" title="全画面プレビュー"></iframe>
+</div>
+
+<div class="toast" id="toast" role="status"></div>
+
+<script>
+(() => {
+  "use strict";
+
+  /* ================================================================
+   * 【先生向け設定】Googleドライブ直接保存(💾ボタン)を有効にする方法
+   * ----------------------------------------------------------------
+   * 1. https://console.cloud.google.com で新しいプロジェクトを作成
+   * 2. 「APIとサービス」→「ライブラリ」で Google Drive API を有効化
+   * 3. 「OAuth同意画面」を設定(ユーザーの種類は「内部」を選ぶと
+   *    学校のWorkspaceアカウント専用になり、審査不要で安全です)
+   * 4. 「認証情報」→「認証情報を作成」→「OAuthクライアントID」
+   *    → 種類は「ウェブアプリケーション」
+   *    → 「承認済みのJavaScript生成元」に、このアプリを公開している
+   *      URLのオリジン(例: https://○○○.github.io)を追加
+   * 5. 発行されたクライアントIDを、下の "" の中に貼り付けて保存
+   * ※ 未設定("")のままでも、ダウンロード方式は問題なく使えます
+   * ================================================================ */
+  const GOOGLE_CLIENT_ID = "";
+
+  const $ = id => document.getElementById(id);
+  const inputHtml = $("inputHtml"), inputCss = $("inputCss");
+  const gutterHtml = $("gutterHtml"), gutterCss = $("gutterCss");
+  const KEY_HTML = "hps_html", KEY_CSS = "hps_css";
+  let storageOk = true;
+
+  /* ---------- トースト ---------- */
+  let toastTimer = null;
+  function toast(msg){
+    const t = $("toast");
+    t.textContent = msg;
+    t.classList.add("show");
+    clearTimeout(toastTimer);
+    toastTimer = setTimeout(() => t.classList.remove("show"), 2200);
+  }
+
+  /* ---------- シンタックスハイライト ---------- */
+  function escapeHtml(s){
+    return s.replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;");
+  }
+  function highlightHtmlCode(code){
+    let out = "";
+    const re = /(<!--[\s\S]*?-->)|(<\/?)([a-zA-Z][a-zA-Z0-9-]*)((?:\s+[^\s=<>"'\/]+(?:\s*=\s*(?:"[^"]*"|'[^']*'|[^\s<>"'`]+))?)*)\s*(\/?>)/g;
+    let last = 0, m;
+    while((m = re.exec(code)) !== null){
+      if(m[0].length === 0){ re.lastIndex++; continue; }
+      out += escapeHtml(code.slice(last, m.index));
+      if(m[1]){
+        out += '<span class="tk-comment">' + escapeHtml(m[1]) + '</span>';
+      }else{
+        out += '<span class="tk-punc">' + escapeHtml(m[2]) + '</span>';
+        out += '<span class="tk-tag">' + escapeHtml(m[3]) + '</span>';
+        const attrs = m[4] || "";
+        const attrRe = /(\s*)([^\s=]+)(\s*=\s*)("[^"]*"|'[^']*'|[^\s<>"'`]+)|(\s+[^\s=<>"'\/]+)/g;
+        let aLast = 0, am;
+        while((am = attrRe.exec(attrs)) !== null){
+          if(am[0].length === 0){ attrRe.lastIndex++; continue; }
+          out += escapeHtml(attrs.slice(aLast, am.index));
+          if(am[2] !== undefined){
+            out += escapeHtml(am[1]);
+            out += '<span class="tk-attr">' + escapeHtml(am[2]) + '</span>';
+            out += escapeHtml(am[3]);
+            out += '<span class="tk-val">' + escapeHtml(am[4]) + '</span>';
+          }else{
+            out += '<span class="tk-attr">' + escapeHtml(am[5]) + '</span>';
+          }
+          aLast = am.index + am[0].length;
+        }
+        out += escapeHtml(attrs.slice(aLast));
+        out += '<span class="tk-punc">' + escapeHtml(m[5]) + '</span>';
+      }
+      last = m.index + m[0].length;
+    }
+    out += escapeHtml(code.slice(last));
+    return out;
+  }
+  function highlightCssCode(code){
+    let out = "";
+    const re = /(\/\*[\s\S]*?\*\/)|([^{}]+)(\{)([^{}]*)(\})/g;
+    let last = 0, m;
+    while((m = re.exec(code)) !== null){
+      if(m[0].length === 0){ re.lastIndex++; continue; }
+      out += escapeHtml(code.slice(last, m.index));
+      if(m[1]){
+        out += '<span class="tk-comment">' + escapeHtml(m[1]) + '</span>';
+      }else{
+        out += '<span class="tk-sel">' + escapeHtml(m[2]) + '</span>';
+        out += '<span class="tk-punc">' + escapeHtml(m[3]) + '</span>';
+        const body = m[4];
+        const declRe = /([^:;]+)(:)([^;]+)(;?)/g;
+        let dLast = 0, dm;
+        while((dm = declRe.exec(body)) !== null){
+          if(dm[0].length === 0){ declRe.lastIndex++; continue; }
+          out += escapeHtml(body.slice(dLast, dm.index));
+          out += '<span class="tk-prop">' + escapeHtml(dm[1]) + '</span>';
+          out += '<span class="tk-punc">' + escapeHtml(dm[2]) + '</span>';
+          out += '<span class="tk-cssval">' + escapeHtml(dm[3]) + '</span>';
+          out += '<span class="tk-punc">' + escapeHtml(dm[4]) + '</span>';
+          dLast = dm.index + dm[0].length;
+        }
+        out += escapeHtml(body.slice(dLast));
+        out += '<span class="tk-punc">' + escapeHtml(m[5]) + '</span>';
+      }
+      last = m.index + m[0].length;
+    }
+    out += escapeHtml(code.slice(last));
+    return out;
+  }
+  function updateHighlight(area, pre, fn){
+    try{
+      let code = area.value;
+      if(code.endsWith("\n")) code += " ";
+      pre.innerHTML = fn(code);
+      pre.scrollTop = area.scrollTop;
+      pre.scrollLeft = area.scrollLeft;
+    }catch(err){
+      /* ハイライトに失敗しても編集機能は止めない。色付けだけ諦める */
+      try{ pre.textContent = area.value; }catch(e){}
+    }
+  }
+  function bindHighlight(area, pre, fn){
+    const sync = () => { pre.scrollTop = area.scrollTop; pre.scrollLeft = area.scrollLeft; };
+    area.addEventListener("scroll", sync);
+    area.addEventListener("input", () => updateHighlight(area, pre, fn));
+    updateHighlight(area, pre, fn);
+  }
+
+  /* ---------- 行番号 ---------- */
+  function updateGutter(area, gutter){
+    const n = area.value.split("\n").length;
+    let s = "";
+    for(let i = 1; i <= n; i++) s += i + "\n";
+    gutter.textContent = s;
+    gutter.scrollTop = area.scrollTop;
+  }
+  function bindEditor(area, gutter, pre, fn){
+    area.addEventListener("input", () => { updateGutter(area, gutter); updateHighlight(area, pre, fn); scheduleSave(); });
+    area.addEventListener("scroll", () => { gutter.scrollTop = area.scrollTop; pre.scrollTop = area.scrollTop; pre.scrollLeft = area.scrollLeft; });
+    area.addEventListener("keydown", e => {
+      if(e.key === "Tab"){
+        e.preventDefault();
+        const s = area.selectionStart, t = area.selectionEnd;
+        area.value = area.value.slice(0, s) + "  " + area.value.slice(t);
+        area.selectionStart = area.selectionEnd = s + 2;
+        updateGutter(area, gutter); updateHighlight(area, pre, fn); scheduleSave();
+      }
+    });
+    const wrap = area.closest(".editor-wrap");
+    if(wrap){
+      wrap.addEventListener("mousedown", e => {
+        if(e.target !== area) area.focus();
+      });
+    }
+  }
+
+  /* ---------- 自動保存 ---------- */
+  let saveTimer = null;
+  function scheduleSave(){
+    $("saveState").textContent = "保存中…";
+    clearTimeout(saveTimer);
+    saveTimer = setTimeout(saveNow, 400);
+  }
+  function saveNow(){
+    if(!storageOk){ $("saveState").textContent = ""; return; }
+    try{
+      localStorage.setItem(KEY_HTML, inputHtml.value);
+      localStorage.setItem(KEY_CSS, inputCss.value);
+      $("saveState").textContent = "✓ 自動保存済み";
+    }catch(e){
+      storageOk = false;
+      $("saveState").textContent = "(自動保存が使えない環境です)";
+    }
+  }
+  function restore(){
+    try{
+      inputHtml.value = localStorage.getItem(KEY_HTML) || "";
+      inputCss.value  = localStorage.getItem(KEY_CSS) || "";
+      if(inputHtml.value || inputCss.value) $("saveState").textContent = "✓ 前回の続きを読み込みました";
+    }catch(e){ storageOk = false; }
+  }
+
+  /* ---------- サニタイズ & ドキュメント生成 ---------- */
+  function sanitize(html){
+    return html
+      .replace(/<script[\s\S]*?<\/script\s*>/gi, "")
+      .replace(/<\/?script[^>]*>/gi, "")
+      .replace(/\son\w+\s*=\s*"[^"]*"/gi, "")
+      .replace(/\son\w+\s*=\s*'[^']*'/gi, "")
+      .replace(/\son\w+\s*=\s*[^\s>]+/gi, "")
+      .replace(/javascript:/gi, "")
+      .replace(/<a\s/gi, '<a target="_blank" rel="noopener noreferrer" ');
+  }
+  function buildDoc(includeSource){
+    const safeHtml = sanitize(inputHtml.value);
+    const safeCss  = inputCss.value.replace(/<\/style/gi, "");
+    const styleTag = "<style>\n" + safeCss + "\n</style>";
+    let doc;
+    if(/<html[\s>]/i.test(safeHtml)){
+      if(/<\/head>/i.test(safeHtml)) doc = safeHtml.replace(/<\/head>/i, styleTag + "</head>");
+      else doc = safeHtml.replace(/<html[^>]*>/i, m => m + styleTag);
+    }else{
+      doc = "<!DOCTYPE html>\n<html lang=\"ja\">\n<head>\n<meta charset=\"UTF-8\">\n" +
+        "<meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0\">\n" +
+        styleTag + "\n</head>\n<body>\n" + safeHtml + "\n</body>\n</html>";
+    }
+    if(includeSource){
+      const src = JSON.stringify({h: inputHtml.value, c: inputCss.value});
+      const b64 = bytesToB64Url(new TextEncoder().encode(src));
+      doc += "\n<!--HPS_PROJECT:" + b64 + "-->";
+    }
+    return doc;
+  }
+  function isEmpty(){
+    return !inputHtml.value.trim() && !inputCss.value.trim();
+  }
+
+  /* ---------- 表示 ---------- */
+  let hasRendered = false;
+  function run(){
+    if(isEmpty()){ toast("コードを入力してから「▶ 表示する」を押してね"); return; }
+    $("previewFrame").srcdoc = buildDoc();
+    $("emptyState").style.display = "none";
+    hasRendered = true;
+    saveNow();
+  }
+  $("btnRun").addEventListener("click", run);
+
+  /* ---------- 全画面 ---------- */
+  $("btnFullscreen").addEventListener("click", () => {
+    if(isEmpty()){ toast("まずはコードを書いてみよう!"); return; }
+    $("fsFrame").srcdoc = buildDoc();
+    $("fsOverlay").classList.add("show");
+  });
+  let viewerMode = false;
+  $("btnFsClose").addEventListener("click", () => {
+    if(viewerMode){
+      history.replaceState(null, "", location.pathname + location.search);
+      location.reload();
+      return;
+    }
+    $("fsOverlay").classList.remove("show");
+  });
+
+  /* ---------- URL生成 ---------- */
+  function bytesToB64Url(bytes){
+    let bin = "";
+    const chunk = 0x8000;
+    for(let i = 0; i < bytes.length; i += chunk){
+      bin += String.fromCharCode.apply(null, bytes.subarray(i, i + chunk));
+    }
+    return btoa(bin).replace(/\+/g, "-").replace(/\//g, "_").replace(/=+$/, "");
+  }
+  function b64UrlToBytes(s){
+    const b = atob(s.replace(/-/g, "+").replace(/_/g, "/"));
+    return Uint8Array.from(b, c => c.charCodeAt(0));
+  }
+  async function compressText(text){
+    if(typeof CompressionStream === "undefined") return null;
+    try{
+      const stream = new Blob([new TextEncoder().encode(text)])
+        .stream().pipeThrough(new CompressionStream("deflate-raw"));
+      const buf = await new Response(stream).arrayBuffer();
+      return bytesToB64Url(new Uint8Array(buf));
+    }catch(e){ return null; }
+  }
+  async function decompressText(b64){
+    const stream = new Blob([b64UrlToBytes(b64)])
+      .stream().pipeThrough(new DecompressionStream("deflate-raw"));
+    const buf = await new Response(stream).arrayBuffer();
+    return new TextDecoder().decode(buf);
+  }
+  function toDataUrl(doc){
+    const bytes = new TextEncoder().encode(doc);
+    let bin = "";
+    const chunk = 0x8000;
+    for(let i = 0; i < bytes.length; i += chunk){
+      bin += String.fromCharCode.apply(null, bytes.subarray(i, i + chunk));
+    }
+    return "data:text/html;charset=utf-8;base64," + btoa(bin);
+  }
+  $("btnUrl").addEventListener("click", async () => {
+    if(isEmpty()){ toast("コードを書いてからURLを作ろう!"); return; }
+    const doc = buildDoc();
+    let url = null, meta = "";
+    const hosted = location.protocol === "http:" || location.protocol === "https:";
+    if(hosted){
+      const b64 = await compressText(doc);
+      if(b64){
+        url = location.origin + location.pathname + location.search + "#v=" + b64;
+        meta = "URLの長さ: " + url.length.toLocaleString() + " 文字(圧縮済みの短縮URL。開くと作品がそのまま表示されます)";
+      }
+    }
+    if(!url){
+      url = toDataUrl(doc);
+      meta = "URLの長さ: " + url.length.toLocaleString() + " 文字" +
+        (hosted ? "(この環境では圧縮が使えないため標準形式です)"
+                : "(※アプリをWebで公開すると、より短いURLが作れるようになります)");
+    }
+    $("urlBox").value = url;
+    $("urlMeta").textContent = meta;
+    $("urlOverlay").classList.add("show");
+  });
+  $("btnUrlCopy").addEventListener("click", async () => {
+    const text = $("urlBox").value;
+    try{
+      await navigator.clipboard.writeText(text);
+      toast("📋 URLをコピーしました!");
+    }catch(e){
+      $("urlBox").select();
+      document.execCommand("copy");
+      toast("📋 URLをコピーしました!");
+    }
+  });
+  $("btnUrlClose").addEventListener("click", () => $("urlOverlay").classList.remove("show"));
+
+  /* ---------- ダウンロード ---------- */
+  $("btnDownload").addEventListener("click", () => {
+    if(isEmpty()){ toast("コードを書いてからダウンロードしよう!"); return; }
+    const blob = new Blob([buildDoc(true)], {type: "text/html"});
+    const a = document.createElement("a");
+    a.href = URL.createObjectURL(blob);
+    a.download = "my-page.html";
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+    setTimeout(() => URL.revokeObjectURL(a.href), 3000);
+    toast("⬇ my-page.html を保存しました。ドライブにアップすれば、次回「📂 読み込む」で続きから再開できます");
+  });
+
+  /* ---------- 全クリア ---------- */
+  $("btnClear").addEventListener("click", () => $("clearOverlay").classList.add("show"));
+  $("btnClearCancel").addEventListener("click", () => $("clearOverlay").classList.remove("show"));
+  $("btnClearOk").addEventListener("click", () => {
+    inputHtml.value = ""; inputCss.value = "";
+    updateGutter(inputHtml, gutterHtml);
+    updateGutter(inputCss, gutterCss);
+    updateHighlight(inputHtml, $("highlightHtml"), highlightHtmlCode);
+    updateHighlight(inputCss, $("highlightCss"), highlightCssCode);
+    try{
+      localStorage.removeItem(KEY_HTML);
+      localStorage.removeItem(KEY_CSS);
+      localStorage.removeItem(KEY_DRIVE_ID);
+    }catch(e){}
+    $("previewFrame").srcdoc = "";
+    $("emptyState").style.display = "flex";
+    hasRendered = false;
+    $("clearOverlay").classList.remove("show");
+    $("saveState").textContent = "";
+    toast("🗑 すべて消去しました");
+  });
+
+  /* ---------- 使い方 ---------- */
+  $("btnGuide").addEventListener("click", () => $("guideOverlay").classList.add("show"));
+  $("btnGuideClose").addEventListener("click", () => $("guideOverlay").classList.remove("show"));
+
+  /* ---------- モーダル共通: 背景クリック / Escで閉じる ---------- */
+  ["guideOverlay","clearOverlay","urlOverlay","loadOverlay","driveSetupOverlay","imageOverlay"].forEach(id => {
+    $(id).addEventListener("click", e => { if(e.target === $(id)) $(id).classList.remove("show"); });
+  });
+  document.addEventListener("keydown", e => {
+    if(e.key === "Escape"){
+      ["guideOverlay","clearOverlay","urlOverlay","loadOverlay","driveSetupOverlay","imageOverlay"].forEach(id => $(id).classList.remove("show"));
+      if(!viewerMode) $("fsOverlay").classList.remove("show");
+    }
+  });
+
+  /* ---------- ドライブに保存 ---------- */
+  const KEY_DRIVE_ID = "hps_drive_id";
+  let tokenClient = null, accessToken = null, tokenExpiry = 0;
+  function gisReady(){
+    return window.google && google.accounts && google.accounts.oauth2;
+  }
+  function getDriveToken(){
+    return new Promise((resolve, reject) => {
+      if(accessToken && Date.now() < tokenExpiry - 60000) return resolve(accessToken);
+      if(!gisReady()) return reject(new Error("gis_not_loaded"));
+      if(!tokenClient){
+        tokenClient = google.accounts.oauth2.initTokenClient({
+          client_id: GOOGLE_CLIENT_ID,
+          scope: "https://www.googleapis.com/auth/drive.file",
+          callback: () => {}
+        });
+      }
+      tokenClient.callback = resp => {
+        if(resp.error){ reject(new Error(resp.error)); return; }
+        accessToken = resp.access_token;
+        tokenExpiry = Date.now() + (Number(resp.expires_in) || 3600) * 1000;
+        resolve(accessToken);
+      };
+      tokenClient.requestAccessToken();
+    });
+  }
+  async function uploadNewFile(token, doc){
+    const boundary = "hps_boundary_" + Date.now();
+    const meta = JSON.stringify({name: "my-page.html", mimeType: "text/html"});
+    const body =
+      "--" + boundary + "\r\n" +
+      "Content-Type: application/json; charset=UTF-8\r\n\r\n" +
+      meta + "\r\n" +
+      "--" + boundary + "\r\n" +
+      "Content-Type: text/html; charset=UTF-8\r\n\r\n" +
+      doc + "\r\n" +
+      "--" + boundary + "--";
+    const res = await fetch("https://www.googleapis.com/upload/drive/v3/files?uploadType=multipart", {
+      method: "POST",
+      headers: {
+        "Authorization": "Bearer " + token,
+        "Content-Type": "multipart/related; boundary=" + boundary
+      },
+      body
+    });
+    if(!res.ok) throw new Error("upload_failed_" + res.status);
+    const data = await res.json();
+    if(data.id){ try{ localStorage.setItem(KEY_DRIVE_ID, data.id); }catch(e){} }
+  }
+  async function overwriteFile(token, fileId, doc){
+    const res = await fetch("https://www.googleapis.com/upload/drive/v3/files/" + encodeURIComponent(fileId) + "?uploadType=media", {
+      method: "PATCH",
+      headers: {
+        "Authorization": "Bearer " + token,
+        "Content-Type": "text/html; charset=UTF-8"
+      },
+      body: doc
+    });
+    if(res.status === 404 || res.status === 403){
+      try{ localStorage.removeItem(KEY_DRIVE_ID); }catch(e){}
+      return false; /* ファイルが消されていた → 新規作成へ */
+    }
+    if(!res.ok) throw new Error("upload_failed_" + res.status);
+    return true;
+  }
+  $("btnDrive").addEventListener("click", async () => {
+    if(isEmpty()){ toast("コードを書いてから保存しよう!"); return; }
+    if(!GOOGLE_CLIENT_ID){ $("driveSetupOverlay").classList.add("show"); return; }
+    if(!gisReady()){ toast("Google連携を読み込めませんでした。ネット接続を確認してね"); return; }
+    try{
+      toast("💾 ドライブに保存中…");
+      const token = await getDriveToken();
+      const doc = buildDoc(true);
+      let fileId = null;
+      try{ fileId = localStorage.getItem(KEY_DRIVE_ID); }catch(e){}
+      let done = false;
+      if(fileId) done = await overwriteFile(token, fileId, doc);
+      if(!done) await uploadNewFile(token, doc);
+      toast("💾 ドライブに保存しました!(マイドライブ内の my-page.html)");
+    }catch(e){
+      if(String(e.message).includes("access_denied") || String(e.message).includes("popup")){
+        toast("ログインがキャンセルされました");
+      }else{
+        toast("保存に失敗しました。「⬇ ダウンロード」での保存も使えます");
+      }
+    }
+  });
+  $("btnDriveSetupClose").addEventListener("click", () => $("driveSetupOverlay").classList.remove("show"));
+
+  /* ---------- 画像追加 ---------- */
+  $("btnImage").addEventListener("click", () => {
+    $("imageFileInput").value = "";
+    $("imagePreviewWrap").style.display = "none";
+    $("imageWarning").style.display = "none";
+    $("btnImageCopy").disabled = true;
+    $("imageOverlay").classList.add("show");
+  });
+  $("btnImageClose").addEventListener("click", () => $("imageOverlay").classList.remove("show"));
+  $("imageFileInput").addEventListener("change", () => {
+    const file = $("imageFileInput").files[0];
+    if(!file) return;
+    if(!file.type.startsWith("image/")){ toast("画像ファイルを選んでね"); return; }
+    const reader = new FileReader();
+    reader.onload = () => {
+      const dataUrl = reader.result;
+      $("imagePreviewImg").src = dataUrl;
+      const alt = file.name.replace(/\.[^.]+$/, "");
+      $("imageTagBox").value = '<img src="' + dataUrl + '" alt="' + alt + '">';
+      $("imagePreviewWrap").style.display = "block";
+      $("imageWarning").style.display = (file.size > 300 * 1024) ? "block" : "none";
+      $("btnImageCopy").disabled = false;
+    };
+    reader.onerror = () => toast("画像を読み込めませんでした");
+    reader.readAsDataURL(file);
+  });
+  $("btnImageCopy").addEventListener("click", async () => {
+    const text = $("imageTagBox").value;
+    try{
+      await navigator.clipboard.writeText(text);
+    }catch(e){
+      $("imageTagBox").select();
+      document.execCommand("copy");
+    }
+    toast("📋 画像タグをコピーしました。HTML欄に貼り付けてね");
+  });
+
+  /* ---------- ファイル読み込み ---------- */
+  let pendingFileText = null;
+  $("btnLoad").addEventListener("click", () => {
+    $("fileInput").value = "";
+    $("fileInput").click();
+  });
+  $("btnLoad2").addEventListener("click", () => $("btnLoad").click());
+  $("fileInput").addEventListener("change", () => {
+    const file = $("fileInput").files[0];
+    if(!file) return;
+    const reader = new FileReader();
+    reader.onload = () => {
+      pendingFileText = reader.result;
+      if(isEmpty()){
+        applyLoad(pendingFileText);
+      }else{
+        $("loadOverlay").classList.add("show");
+      }
+    };
+    reader.onerror = () => toast("ファイルを読み込めませんでした");
+    reader.readAsText(file, "UTF-8");
+  });
+  $("btnLoadCancel").addEventListener("click", () => {
+    pendingFileText = null;
+    $("loadOverlay").classList.remove("show");
+  });
+  $("btnLoadOk").addEventListener("click", () => {
+    $("loadOverlay").classList.remove("show");
+    if(pendingFileText !== null) applyLoad(pendingFileText);
+    pendingFileText = null;
+  });
+  function applyLoad(text){
+    ["guideOverlay","clearOverlay","urlOverlay","loadOverlay","driveSetupOverlay","imageOverlay"].forEach(id => $(id).classList.remove("show"));
+    const m = text.match(/<!--HPS_PROJECT:([A-Za-z0-9\-_]+)-->/);
+    let loaded = false;
+    if(m){
+      try{
+        const src = JSON.parse(new TextDecoder().decode(b64UrlToBytes(m[1])));
+        inputHtml.value = src.h || "";
+        inputCss.value  = src.c || "";
+        loaded = true;
+      }catch(e){ /* 壊れていたら通常HTMLとして処理 */ }
+    }
+    if(!loaded){
+      let html = text, css = "";
+      const sm = html.match(/<style[^>]*>([\s\S]*?)<\/style>/i);
+      if(sm){ css = sm[1].trim(); html = html.replace(sm[0], ""); }
+      const bm = html.match(/<body[^>]*>([\s\S]*?)<\/body>/i);
+      if(bm) html = bm[1];
+      inputHtml.value = html.trim();
+      inputCss.value  = css;
+    }
+    updateGutter(inputHtml, gutterHtml);
+    updateGutter(inputCss, gutterCss);
+    updateHighlight(inputHtml, $("highlightHtml"), highlightHtmlCode);
+    updateHighlight(inputCss, $("highlightCss"), highlightCssCode);
+    saveNow();
+    run();
+    setTimeout(() => inputHtml.focus(), 50);
+    toast("📂 読み込みました!続きから編集できます");
+  }
+
+  /* ---------- 共有URLビューアモード (#v=...) ---------- */
+  async function tryViewerMode(){
+    const m = location.hash.match(/^#v=([A-Za-z0-9\-_]+)$/);
+    if(!m) return false;
+    viewerMode = true;
+    const bar = $("fsOverlay").querySelector(".fs-bar span");
+    bar.textContent = "🔗 共有された作品を表示中";
+    $("btnFsClose").textContent = "✎ 自分も作ってみる";
+    $("fsOverlay").classList.add("show");
+    try{
+      if(typeof DecompressionStream === "undefined") throw new Error("unsupported");
+      const doc = await decompressText(m[1]);
+      $("fsFrame").srcdoc = doc;
+    }catch(e){
+      $("fsFrame").srcdoc = "<p style='font-family:sans-serif;padding:20px'>" +
+        "この作品URLを読み込めませんでした。URLが途中で切れていないか確認するか、" +
+        "ファイルでの提出に切り替えてください。</p>";
+    }
+    return true;
+  }
+
+  /* ---------- 初期化 ---------- */
+  bindEditor(inputHtml, gutterHtml, $("highlightHtml"), highlightHtmlCode);
+  bindEditor(inputCss, gutterCss, $("highlightCss"), highlightCssCode);
+  restore();
+  updateGutter(inputHtml, gutterHtml);
+  updateGutter(inputCss, gutterCss);
+  updateHighlight(inputHtml, $("highlightHtml"), highlightHtmlCode);
+  updateHighlight(inputCss, $("highlightCss"), highlightCssCode);
+  tryViewerMode();
+})();
+</script>
+</body>
+</html>
